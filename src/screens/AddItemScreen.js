@@ -1,8 +1,10 @@
+
 import React, { useState } from 'react';
 import { View, StyleSheet, Alert, TouchableOpacity } from 'react-native';
 import { TextInput, Button, Text, Snackbar } from 'react-native-paper';
 import DateTimePicker from '@react-native-community/datetimepicker';
 import firestore from '@react-native-firebase/firestore';
+import auth from '@react-native-firebase/auth';
 
 const AddItemScreen = ({ route, navigation }) => {
   const { itemDetails } = route.params || {}; // Get data passed from ScannerScreen
@@ -20,48 +22,70 @@ const AddItemScreen = ({ route, navigation }) => {
   const [fat, setFat] = useState('');
   const [carbonFootprint, setCarbonFootprint] = useState('');
 
-  // Assuming userId is available via Firebase Authentication
-  const userId = 'userID1'; // Replace with actual user ID from Firebase Authentication
 
-  const addItem = async () => {
-    if (!itemName || !expiryDate || !calories || !protein || !fat || !carbonFootprint) {
-      setError('Please fill out all fields.');
-      return;
-    }
 
-    setLoading(true); // Show loading while saving
+const userId = auth().currentUser?.uid; // Get the authenticated user's ID
+console.log('User ID:', userId); 
 
-    const pantryItem = {
-      name: itemName,
-      expiryDate: expiryDate,
-      calories: parseFloat(calories),
-      protein: parseFloat(protein),
-      fat: parseFloat(fat),
-      carbonFootprint: parseFloat(carbonFootprint),
-      userId: userId,
-    };
+const addItem = async () => {
+  if (!itemName || !expiryDate || !category || !price || !quantity) {
+    setError('Please fill out all fields.');
+    return;
+  }
 
-    try {
-      // Add item to Firestore
-      await firestore()
-        .collection('users')
-        .doc(userId) // Assuming each user has a document in the 'users' collection
-        .update({
-          pantry: firestore.FieldValue.arrayUnion(pantryItem),
-        });
+  const safeItemName = itemName || 'Unknown Item';
+  const safeCategory = category || 'Uncategorized';
+  const safeExpiryDate = expiryDate || new Date();
+  const safePrice = price !== undefined && price !== null ? parseFloat(price) : 0;
+  const safeQuantity = quantity !== undefined && quantity !== null ? parseInt(quantity) : 0;
+  const safeUserId = userId || 'Unknown User';
 
-      setLoading(false);
-      setSuccessMessage('Item successfully added!');
-      setIsToastVisible(true);
+  setLoading(true); // Show loading while saving
 
-      // Navigate to PantryList with the new item
-      navigation.navigate('PantryList', { newItem: pantryItem });
-    } catch (error) {
-      setLoading(false);
-      setError('Error adding item. Please try again.');
-      console.error('Error adding pantry item:', error);
-    }
+  const pantryItem = {
+    category: safeCategory,
+    name: safeItemName,
+    expiryDate: safeExpiryDate,
+    price: safePrice,
+    quantity: safeQuantity,
+    userId: safeUserId,
   };
+
+  try {
+    // Check if the user's document exists. If not, create it.
+    const userDocRef = firestore().collection('users').doc(userId);
+
+    const docSnapshot = await userDocRef.get();
+
+    if (!docSnapshot.exists) {
+      // If the user document doesn't exist, create it
+      console.log('User document does not exist, creating new document');
+      await userDocRef.set({
+        pantry: [pantryItem],  // Create pantry array with the first item
+      });
+    } else {
+      // If it exists, just update the pantry array
+      console.log('User document exists, updating pantry array');
+      await userDocRef.update({
+        pantry: firestore.FieldValue.arrayUnion(pantryItem),
+      });
+    }
+
+    setLoading(false);
+    setSuccessMessage('Item successfully added!');
+    setIsToastVisible(true);
+
+    // Navigate to PantryList with the new item
+    navigation.navigate('PantryList', { newItem: pantryItem });
+  } catch (error) {
+    setLoading(false);
+    setError('Error adding item. Please try again.');
+    console.error('Error adding pantry item:', error);  // Log the error to the console
+  }
+};
+
+
+  
 
   const handleDateChange = (event, selectedDate) => {
     setShowDatePicker(false);

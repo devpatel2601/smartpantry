@@ -2,53 +2,58 @@ import React, { useState, useEffect } from 'react';
 import { View, Text, FlatList, StyleSheet, TouchableOpacity, Alert, TextInput } from 'react-native';
 import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
 import { format } from 'date-fns';
-import { firestore } from '../firebase'; // Ensure firestore is properly configured
+import { firestore } from '../firebase'; // Ensure Firebase Firestore is properly configured
 import { collection, getDocs, doc, deleteDoc } from 'firebase/firestore';
-import auth from '@react-native-firebase/auth'; // Import Firebase Auth
+import auth from '@react-native-firebase/auth'; // Ensure Firebase Auth is properly configured
 
 const PantryListScreen = ({ navigation }) => {
   const [pantryItems, setPantryItems] = useState([]);
   const [searchTerm, setSearchTerm] = useState('');
-  const [loading, setLoading] = useState(true); // For loading state
-  const [error, setError] = useState(null); // For handling errors
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
 
-  // Get the userId from Firebase Authentication
-  const userId = auth().currentUser?.uid; // Fetch the authenticated user's UID
+  // Get the current logged-in user's ID
+  const userId = auth().currentUser?.uid;
 
   useEffect(() => {
     const fetchPantryItems = async () => {
       if (!userId) {
-        setError('User not logged in'); // Handle if no user is logged in
+        setError('User is not logged in.');
         setLoading(false);
         return;
       }
 
       try {
-        console.log('Fetching pantry items for user ID:', userId); // Debugging line
-        const userDocRef = doc(firestore, 'users', userId); // Reference to the user's document
-        const pantryItemsRef = collection(userDocRef, 'pantryItems'); // Reference to the 'pantryItems' subcollection
-        const pantryItemsSnap = await getDocs(pantryItemsRef); // Get items from the subcollection
+        setLoading(true); // Set loading to true while fetching data
 
-        const items = pantryItemsSnap.docs.map(doc => ({
+        // Reference the user's document in the `users` collection
+        const userDocRef = doc(firestore, 'users', userId);
+
+        // Reference the `pantryItems` subcollection
+        const pantryItemsRef = collection(userDocRef, 'pantryItems');
+
+        // Fetch all documents from the `pantryItems` subcollection
+        const pantryItemsSnapshot = await getDocs(pantryItemsRef);
+
+        const items = pantryItemsSnapshot.docs.map((doc) => ({
           id: doc.id,
           ...doc.data(),
         }));
 
-        console.log('Pantry items fetched:', items); // Debugging line
         setPantryItems(items);
       } catch (error) {
-        console.error("Error fetching pantry items: ", error);
-        setError('Error fetching pantry items');
+        console.error('Error fetching pantry items:', error);
+        setError('Failed to fetch pantry items.');
       } finally {
-        setLoading(false); // Set loading to false once data is fetched
+        setLoading(false); // Set loading to false after fetching data
       }
     };
 
     fetchPantryItems();
-  }, [userId]); // Re-fetch when userId changes
+  }, [userId]);
 
   // Filter pantry items based on search term
-  const filteredItems = pantryItems.filter(item =>
+  const filteredItems = pantryItems.filter((item) =>
     item.name.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
@@ -57,7 +62,6 @@ const PantryListScreen = ({ navigation }) => {
     const expiryA = new Date(a.expiryDate);
     const expiryB = new Date(b.expiryDate);
 
-    // Prioritize near expiry items and expired ones last
     const now = new Date();
     const isNearExpiryA = expiryA < new Date(now.setDate(now.getDate() + 3));
     const isNearExpiryB = expiryB < new Date(now.setDate(now.getDate() + 3));
@@ -67,6 +71,7 @@ const PantryListScreen = ({ navigation }) => {
     return expiryA - expiryB;
   });
 
+  // Handle deleting an item from the pantry
   const handleDeleteItem = async (itemId) => {
     Alert.alert(
       'Delete Item',
@@ -79,13 +84,15 @@ const PantryListScreen = ({ navigation }) => {
             try {
               const userDocRef = doc(firestore, 'users', userId);
               const pantryItemsRef = collection(userDocRef, 'pantryItems');
-              const itemRef = doc(pantryItemsRef, itemId);
+              const itemDocRef = doc(pantryItemsRef, itemId);
 
               // Delete the item from Firestore
-              await deleteDoc(itemRef);
-              setPantryItems(pantryItems.filter(item => item.id !== itemId)); // Remove item from state
+              await deleteDoc(itemDocRef);
+
+              // Remove the item from the state
+              setPantryItems(pantryItems.filter((item) => item.id !== itemId));
             } catch (error) {
-              console.error("Error deleting pantry item: ", error);
+              console.error('Error deleting pantry item:', error);
             }
           },
         },
@@ -94,11 +101,11 @@ const PantryListScreen = ({ navigation }) => {
   };
 
   const renderItem = ({ item }) => {
-    const formattedExpiry = format(new Date(item.expiryDate), 'MMM dd, yyyy'); // Format expiry date
+    const formattedExpiry = format(new Date(item.expiryDate), 'MMM dd, yyyy');
 
-    // Determine expiry status (Expired, Near Expiry, etc.)
+    // Determine the item's expiry status
     const isExpired = new Date(item.expiryDate) < new Date();
-    const isNearExpiry = new Date(item.expiryDate) < new Date(new Date().setDate(new Date().getDate() + 3)); // 3 days before expiry
+    const isNearExpiry = new Date(item.expiryDate) < new Date(new Date().setDate(new Date().getDate() + 3));
 
     return (
       <View style={[styles.itemCard, isExpired ? styles.expired : isNearExpiry ? styles.nearExpiry : null]}>
@@ -110,7 +117,9 @@ const PantryListScreen = ({ navigation }) => {
           <TouchableOpacity onPress={() => handleDeleteItem(item.id)}>
             <Icon name="delete" size={24} color="red" />
           </TouchableOpacity>
-          <TouchableOpacity onPress={() => navigation.navigate('AddItem', { itemDetails: item })}>
+          <TouchableOpacity
+            onPress={() => navigation.navigate('AddItemScreen', { itemDetails: item })}
+          >
             <Icon name="pencil" size={24} color="blue" />
           </TouchableOpacity>
         </View>
@@ -119,12 +128,11 @@ const PantryListScreen = ({ navigation }) => {
   };
 
   if (loading) {
-    return <Text>{error || 'Loading...'}</Text>; // Show error if any or loading message
+    return <Text>{error || 'Loading pantry items...'}</Text>;
   }
 
   return (
     <View style={styles.container}>
-      {/* Search Bar */}
       <TextInput
         style={styles.searchBar}
         placeholder="Search Pantry"
@@ -132,7 +140,6 @@ const PantryListScreen = ({ navigation }) => {
         onChangeText={setSearchTerm}
       />
 
-      {/* Pantry List */}
       <FlatList
         data={sortedItems}
         keyExtractor={(item) => item.id}
