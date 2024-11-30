@@ -1,6 +1,8 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 import { NavigationContainer } from '@react-navigation/native';
 import { createStackNavigator } from '@react-navigation/stack';
+import auth from '@react-native-firebase/auth'; // Firebase Auth SDK
+
 import WelcomeScreen from './src/screens/WelcomeScreen';
 import HomeScreen from './src/screens/HomeScreen';
 import PantryListScreen from './src/screens/PantryListScreen';
@@ -12,7 +14,6 @@ import NutritionalAnalysisScreen from './src/screens/NutritionalAnalysisScreen';
 import GroceryListScreen from './src/screens/SmartGroceryListScreen';
 import ScannerScreen from './src/screens/ScannerScreen';
 
-// Define type for the Stack Navigator's parameters
 export type RootStackParamList = {
   Welcome: undefined;
   Home: undefined;
@@ -29,6 +30,20 @@ export type RootStackParamList = {
 const Stack = createStackNavigator<RootStackParamList>();
 
 const App: React.FC = () => {
+  useEffect(() => {
+    // Firebase Auth state listener
+    const unsubscribe = auth().onAuthStateChanged(user => {
+      if (user) {
+        console.log('User is signed in: ', user);
+      } else {
+        console.log('No user signed in');
+      }
+    });
+
+    // Cleanup subscription when the component unmounts
+    return () => unsubscribe();
+  }, []);
+
   return (
     <NavigationContainer>
       <Stack.Navigator initialRouteName="Welcome">
@@ -42,6 +57,7 @@ const App: React.FC = () => {
         <Stack.Screen name="NutritionalAnalysis" component={NutritionalAnalysisScreen} />
         <Stack.Screen name="GroceryList" component={GroceryListScreen} />
         <Stack.Screen name="Scanner" component={ScannerScreen} />
+        
       </Stack.Navigator>
     </NavigationContainer>
   );

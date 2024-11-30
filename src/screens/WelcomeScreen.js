@@ -1,7 +1,7 @@
 import React from 'react';
 import { View, Text, StyleSheet, Image, TouchableOpacity } from 'react-native';
 import LinearGradient from 'react-native-linear-gradient'; // Install via `react-native-linear-gradient`
-import Icon from 'react-native-vector-icons/Ionicons'; // Install via `react-native-vector-icons`
+import { Icon } from 'react-native-elements'; // Install via `react-native-vector-icons`
 
 export default function WelcomeScreen({ navigation }) {
   return (
@@ -16,7 +16,7 @@ export default function WelcomeScreen({ navigation }) {
       <Text style={styles.subtitle}>Your smart pantry management assistant</Text>
 
       <TouchableOpacity style={styles.button} onPress={() => navigation.navigate('Home')}>
-        <Icon name="arrow-forward-circle-outline" size={24} color="#fff" />
+      <Icon name="home" type="font-awesome" size={30} />
         <Text style={styles.buttonText}>Get Started</Text>
       </TouchableOpacity>
     </LinearGradient>

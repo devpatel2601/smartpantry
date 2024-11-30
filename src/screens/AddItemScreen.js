@@ -1,7 +1,8 @@
-import React, { useState, useEffect } from 'react';
-import { View, StyleSheet, Alert, TouchableOpacity, ActivityIndicator } from 'react-native';
+import React, { useState } from 'react';
+import { View, StyleSheet, Alert, TouchableOpacity } from 'react-native';
 import { TextInput, Button, Text, Snackbar } from 'react-native-paper';
 import DateTimePicker from '@react-native-community/datetimepicker';
+import firestore from '@react-native-firebase/firestore';
 
 const AddItemScreen = ({ route, navigation }) => {
   const { itemDetails } = route.params || {}; // Get data passed from ScannerScreen
@@ -13,22 +14,53 @@ const AddItemScreen = ({ route, navigation }) => {
   const [successMessage, setSuccessMessage] = useState(''); // Success toast message
   const [isToastVisible, setIsToastVisible] = useState(false); // Show success toast
 
-  const addItem = () => {
-    if (!itemName || !expiryDate) {
-      setError('Please enter both the item name and expiry date.');
+  // New states for nutritional info and carbon footprint
+  const [calories, setCalories] = useState('');
+  const [protein, setProtein] = useState('');
+  const [fat, setFat] = useState('');
+  const [carbonFootprint, setCarbonFootprint] = useState('');
+
+  // Assuming userId is available via Firebase Authentication
+  const userId = 'userID1'; // Replace with actual user ID from Firebase Authentication
+
+  const addItem = async () => {
+    if (!itemName || !expiryDate || !calories || !protein || !fat || !carbonFootprint) {
+      setError('Please fill out all fields.');
       return;
     }
 
     setLoading(true); // Show loading while saving
-    console.log(`Item Added: ${itemName}, Expiry: ${expiryDate.toLocaleDateString()}`);
-    
-    // Firebase integration here to save the item in the database
-    setTimeout(() => {
+
+    const pantryItem = {
+      name: itemName,
+      expiryDate: expiryDate,
+      calories: parseFloat(calories),
+      protein: parseFloat(protein),
+      fat: parseFloat(fat),
+      carbonFootprint: parseFloat(carbonFootprint),
+      userId: userId,
+    };
+
+    try {
+      // Add item to Firestore
+      await firestore()
+        .collection('users')
+        .doc(userId) // Assuming each user has a document in the 'users' collection
+        .update({
+          pantry: firestore.FieldValue.arrayUnion(pantryItem),
+        });
+
       setLoading(false);
       setSuccessMessage('Item successfully added!');
       setIsToastVisible(true);
-      navigation.navigate('PantryList', { newItem: { name: itemName, expiryDate } });
-    }, 2000); // Mock save delay
+
+      // Navigate to PantryList with the new item
+      navigation.navigate('PantryList', { newItem: pantryItem });
+    } catch (error) {
+      setLoading(false);
+      setError('Error adding item. Please try again.');
+      console.error('Error adding pantry item:', error);
+    }
   };
 
   const handleDateChange = (event, selectedDate) => {
@@ -41,7 +73,7 @@ const AddItemScreen = ({ route, navigation }) => {
   return (
     <View style={styles.container}>
       <Text style={styles.title}>Add Item</Text>
-      
+
       {/* Item Name Input */}
       <TextInput
         label="Item Name"
@@ -51,7 +83,7 @@ const AddItemScreen = ({ route, navigation }) => {
         mode="outlined"
         autoCapitalize="words"
       />
-      
+
       {/* Expiry Date Picker */}
       <TouchableOpacity onPress={() => setShowDatePicker(true)} style={styles.dateInput}>
         <Text style={styles.dateText}>
@@ -66,6 +98,42 @@ const AddItemScreen = ({ route, navigation }) => {
           onChange={handleDateChange}
         />
       )}
+
+      {/* Nutritional Information Inputs */}
+      <TextInput
+        label="Calories"
+        value={calories}
+        onChangeText={(text) => setCalories(text)}
+        style={[styles.input, error ? styles.inputError : null]}
+        mode="outlined"
+        keyboardType="numeric"
+      />
+      <TextInput
+        label="Protein (g)"
+        value={protein}
+        onChangeText={(text) => setProtein(text)}
+        style={[styles.input, error ? styles.inputError : null]}
+        mode="outlined"
+        keyboardType="numeric"
+      />
+      <TextInput
+        label="Fat (g)"
+        value={fat}
+        onChangeText={(text) => setFat(text)}
+        style={[styles.input, error ? styles.inputError : null]}
+        mode="outlined"
+        keyboardType="numeric"
+      />
+
+      {/* Carbon Footprint Input */}
+      <TextInput
+        label="Carbon Footprint (kg)"
+        value={carbonFootprint}
+        onChangeText={(text) => setCarbonFootprint(text)}
+        style={[styles.input, error ? styles.inputError : null]}
+        mode="outlined"
+        keyboardType="numeric"
+      />
 
       {/* Add Item Button */}
       <Button

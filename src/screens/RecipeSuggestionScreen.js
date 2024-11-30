@@ -1,9 +1,10 @@
-// RecipeSuggestionsScreen.js
-import React from 'react';
-import { View, Text, Button, StyleSheet, FlatList, Image, TouchableOpacity } from 'react-native';
+import React, { useState } from 'react';
+import { View, Text, StyleSheet, FlatList, Image, TouchableOpacity } from 'react-native';
 import { Icon } from 'react-native-elements';
 
 const RecipeSuggestionsScreen = ({ navigation }) => {
+  const [favorites, setFavorites] = useState([]); // Store favorite recipes
+
   const recipes = [
     { 
       id: '1', 
@@ -27,6 +28,16 @@ const RecipeSuggestionsScreen = ({ navigation }) => {
     navigation.navigate('RecipeDetail', { recipe }); // Pass recipe data to RecipeDetailScreen
   };
 
+  const handleFavorite = (recipeId) => {
+    setFavorites((prevFavorites) => {
+      if (prevFavorites.includes(recipeId)) {
+        return prevFavorites.filter((id) => id !== recipeId); // Remove from favorites
+      } else {
+        return [...prevFavorites, recipeId]; // Add to favorites
+      }
+    });
+  };
+
   return (
     <View style={styles.container}>
       <Text style={styles.title}>Recipes for You</Text>
@@ -38,9 +49,18 @@ const RecipeSuggestionsScreen = ({ navigation }) => {
             <View style={styles.recipeInfo}>
               <Text style={styles.recipeTitle}>{item.name}</Text>
               <Text style={styles.recipeDescription}>{item.description}</Text>
-              <TouchableOpacity style={styles.favoriteButton}>
-                <Icon name="heart" type="font-awesome" color="white" size={20} />
-                <Text style={styles.favoriteButtonText}>Favorite</Text>
+              <TouchableOpacity 
+                style={styles.favoriteButton} 
+                onPress={() => handleFavorite(item.id)}>
+                <Icon 
+                  name={favorites.includes(item.id) ? 'heart' : 'heart-o'} 
+                  type="font-awesome" 
+                  color="white" 
+                  size={20} 
+                />
+                <Text style={styles.favoriteButtonText}>
+                  {favorites.includes(item.id) ? 'Unfavorite' : 'Favorite'}
+                </Text>
               </TouchableOpacity>
             </View>
           </TouchableOpacity>

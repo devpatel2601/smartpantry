@@ -1,0 +1,48 @@
+{
+    "swagger": "2.0",
+    "info": {
+      "title": "Smart Pantry API",
+      "version": "1.0.0",
+      "description": "API for fetching product details by barcode."
+    },
+    "host": "localhost:3000",
+    "basePath": "/api",
+    "schemes": ["http"],
+    "paths": {
+      "/products/{barcode}": {
+        "get": {
+          "summary": "Fetch product details by barcode",
+          "parameters": [
+            {
+              "name": "barcode",
+              "in": "path",
+              "required": true,
+              "type": "string",
+              "description": "12 or 13-digit barcode of the product"
+            }
+          ],
+          "responses": {
+            "200": {
+              "description": "Product details retrieved successfully",
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "name": { "type": "string" },
+                  "brand": { "type": "string" },
+                  "categories": { "type": "string" },
+                  "price": { "type": "string" }
+                }
+              }
+            },
+            "400": {
+              "description": "Invalid barcode format"
+            },
+            "500": {
+              "description": "Error fetching product details"
+            }
+          }
+        }
+      }
+    }
+  }
+  

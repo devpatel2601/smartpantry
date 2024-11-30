@@ -1,40 +1,79 @@
 import React, { useState, useEffect } from 'react';
 import { View, Text, FlatList, StyleSheet, TouchableOpacity, Alert, TextInput } from 'react-native';
-import Icon from 'react-native-vector-icons/MaterialCommunityIcons'; // Use react-native-vector-icons
-
-import { format } from 'date-fns';  // To format expiry dates
+import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
+import { format } from 'date-fns';
+import { firestore } from '../firebase'; // Ensure firestore is properly configured
+import { collection, getDocs, doc, deleteDoc } from 'firebase/firestore';
 
 const PantryListScreen = ({ navigation }) => {
-  const [pantryItems, setPantryItems] = useState([]); // Replace with actual pantry items fetched from backend
-  const [searchTerm, setSearchTerm] = useState(''); // For searching/filtering pantry items
+  const [pantryItems, setPantryItems] = useState([]);
+  const [searchTerm, setSearchTerm] = useState('');
 
-  // Fetch pantry items (replace with actual API call)
+  // Get the userId (assumed to be available from Firebase Authentication)
+  const userId = 'userID1'; // Replace with actual user ID from Firebase Authentication
+
+  // Fetch pantry items from Firebase
   useEffect(() => {
-    // Example pantry data (replace with data from Firebase or API)
-    setPantryItems([
-      { id: '1', name: 'Tomato', expiry: new Date('2024-12-01') },
-      { id: '2', name: 'Milk', expiry: new Date('2024-11-21') },
-      { id: '3', name: 'Cereal', expiry: new Date('2025-01-01') },
-    ]);
-  }, []);
+    const fetchPantryItems = async () => {
+      try {
+        const userDocRef = doc(firestore, 'users', userId); // Reference to the user's document
+        const pantryItemsRef = collection(userDocRef, 'pantryItems'); // Reference to the 'pantryItems' subcollection
+        const pantryItemsSnap = await getDocs(pantryItemsRef); // Get items from the subcollection
+
+        const items = pantryItemsSnap.docs.map(doc => ({
+          id: doc.id,
+          ...doc.data(),
+        }));
+
+        setPantryItems(items);
+      } catch (error) {
+        console.error("Error fetching pantry items: ", error);
+      }
+    };
+
+    fetchPantryItems();
+  }, [userId]);
 
   // Filter pantry items based on search term
   const filteredItems = pantryItems.filter(item =>
     item.name.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
-  const handleDeleteItem = (itemId) => {
+  // Sort pantry items by expiry status
+  const sortedItems = filteredItems.sort((a, b) => {
+    const expiryA = new Date(a.expiryDate);
+    const expiryB = new Date(b.expiryDate);
+
+    // Prioritize near expiry items and expired ones last
+    const now = new Date();
+    const isNearExpiryA = expiryA < new Date(now.setDate(now.getDate() + 3));
+    const isNearExpiryB = expiryB < new Date(now.setDate(now.getDate() + 3));
+
+    if (isNearExpiryA && !isNearExpiryB) return -1;
+    if (!isNearExpiryA && isNearExpiryB) return 1;
+    return expiryA - expiryB;
+  });
+
+  const handleDeleteItem = async (itemId) => {
     Alert.alert(
       'Delete Item',
       'Are you sure you want to delete this item?',
       [
-        {
-          text: 'Cancel',
-        },
+        { text: 'Cancel' },
         {
           text: 'Delete',
-          onPress: () => {
-            setPantryItems(pantryItems.filter(item => item.id !== itemId)); // Remove item from state
+          onPress: async () => {
+            try {
+              const userDocRef = doc(firestore, 'users', userId);
+              const pantryItemsRef = collection(userDocRef, 'pantryItems');
+              const itemRef = doc(pantryItemsRef, itemId);
+
+              // Delete the item from Firestore
+              await deleteDoc(itemRef);
+              setPantryItems(pantryItems.filter(item => item.id !== itemId)); // Remove item from state
+            } catch (error) {
+              console.error("Error deleting pantry item: ", error);
+            }
           },
         },
       ]
@@ -42,11 +81,11 @@ const PantryListScreen = ({ navigation }) => {
   };
 
   const renderItem = ({ item }) => {
-    const formattedExpiry = format(item.expiry, 'MMM dd, yyyy'); // Format expiry date
+    const formattedExpiry = format(new Date(item.expiryDate), 'MMM dd, yyyy'); // Format expiry date
 
     // Determine expiry status (Expired, Near Expiry, etc.)
-    const isExpired = new Date(item.expiry) < new Date();
-    const isNearExpiry = new Date(item.expiry) < new Date(new Date().setDate(new Date().getDate() + 3)); // 3 days before expiry
+    const isExpired = new Date(item.expiryDate) < new Date();
+    const isNearExpiry = new Date(item.expiryDate) < new Date(new Date().setDate(new Date().getDate() + 3)); // 3 days before expiry
 
     return (
       <View style={[styles.itemCard, isExpired ? styles.expired : isNearExpiry ? styles.nearExpiry : null]}>
@@ -78,7 +117,7 @@ const PantryListScreen = ({ navigation }) => {
 
       {/* Pantry List */}
       <FlatList
-        data={filteredItems}
+        data={sortedItems}
         keyExtractor={(item) => item.id}
         renderItem={renderItem}
         contentContainerStyle={styles.list}

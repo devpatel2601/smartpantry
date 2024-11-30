@@ -1,0 +1,13 @@
+{
+  "type": "service_account",
+  "project_id": "smartpantryapp-a524e",
+  "private_key_id": "9093d89a45e375709a4d6b4eb1eb8df7b3aa37ed",
+  "private_key": "-----BEGIN PRIVATE KEY-----\nMIIEvQIBADANBgkqhkiG9w0BAQEFAASCBKcwggSjAgEAAoIBAQCW99pHg2S4GtoP\nkMUZ8oh7kz9ZlK85hhRVZbAq2P+azQpXNhXyMiZzyKxGN4fgmcHu3NnDsIZ7BPCb\n4j3rfK+v7jRi3z8T4ZCs6gEoObZEguD7OrxrCDYpZDjUbIr4stIdBAtUTjqZ31XA\nKE1h7zUUk43Qmk8zoXa4O5cSVAvdpBS4nuvwu4SNoGbpMhEabcjGpmOuKe74Cg4T\n7P4Jf0zNT5O7e6q24vRl9UzlyKAxPb1GNgfX5yx2MDjv00ZVUOWg0w5rVVHckZh1\n4BaqIlkfAg3Owbd7zBC1lpSvHuZe5IBnHth6eB+Snf6kWLQEXi1tOk2H7e0V49jj\nOpLR9hh3AgMBAAECggEAJMh/Bq2c/L6OIvzDCW9uka1u4gS4LOveSHBeXBJDNRSA\nUH99GWXeuJdMYk9la/QKrIhjBqscGR07AsA9FgNrSxJe8TgzxkRPW9IoNgTZxBef\neZb2EZ4OlEc3EYrg0XfAehFiMUhePt+LpSYstI/z/u90vj7azVmp83mRdYXE3luc\nQu992WrP+v5hT+mt4RxFjkDvSiJE/Dup7IOc8b7HhkgN4XgTd/Fffkr0LKdOUODd\nPLXwUGfmRWISMQmxsBsP3yiipe9GmqdjV4OPAvWal47qg5VFh4JmdxUpCbByvVhl\n36mrdmQD9LMi8H2RwAEYbUJqxeSO8ZPQDLsFkytBAQKBgQDPGYoZoTMGQrI1PCva\n6CS8c5lbzciXRJwhztNsSAvR64vFHZtk/swXz9EdO2BZPurvC37j07fFUHwYGbkR\nZz/SMssRIRssgXkxLooE78ESG+HwqS/SQMqdwxsZnOBYStDKc5Y6A7CLQeiyhkWP\nshYyfotrmoQkom9ZiRX4JKBxjQKBgQC6nVqUms8j6DL/ruZwgieYNjemvLMvMiLs\nI4lB5Osfe2xE+RllRRgGZ0nao0wkL6Sp1+gusCx5Zzy6cBN+ZF8OZGdiH1vN+3K6\naA8qwwcGKO/bLs7MqCcwW7kKvKxmWrIvJxmgg97BlA6yqh9rKGyGwiHtmAFN/vQ3\nAbmZ78IXEwKBgAiE/HFheD/hroMSHpu6wQgfmUd1h7LxV5rsbzYdIJ9aGT3aofHd\nqXexTODu+F+zfuamimnE4+JyFSjIphxZKv7yp/fkbMG/8cRcLcFWO5MLIphL3XPA\nxpUG2a6MDY6URVKOvrdUP4b7Bx+Q9nuaz97z5bhfeuAm7n24bfbvSsphAoGBALJK\noD4WYg02TXNHENcxIs8kDat54eAXkJH3qa2RHqqnatvC+mZsyvVjPYZsOdTgx/uV\nUjk5DGS5I6Ykaht5ne/MMZHnz/hOYmCCBuueBVn3RqIsaFvT1A05tOLzO+tWf6LZ\nQny/QNXFtP0x2G6y4m0lkPDFJ4nzKjRbq43NKayNAoGAR0aHihKAQ7VoYQcH84hD\nbDoxe7EoZ8qWc3qK4hSXQ3fSc3kXUoKKcl2MmLEOtiqNfI3zzYXmCRXddV1ZL2SQ\nDzuGuBk+kQVnlUzIyoYTo3Q0AREZAwU6PayD6NkIsDGQP6q3RQL+EWpCu1cJWDH/\nJ6okhbMfp3ZzPOpMHCmFkKM=\n-----END PRIVATE KEY-----\n",
+  "client_email": "firebase-adminsdk-a9gxi@smartpantryapp-a524e.iam.gserviceaccount.com",
+  "client_id": "111405420796458434733",
+  "auth_uri": "https://accounts.google.com/o/oauth2/auth",
+  "token_uri": "https://oauth2.googleapis.com/token",
+  "auth_provider_x509_cert_url": "https://www.googleapis.com/oauth2/v1/certs",
+  "client_x509_cert_url": "https://www.googleapis.com/robot/v1/metadata/x509/firebase-adminsdk-a9gxi%40smartpantryapp-a524e.iam.gserviceaccount.com",
+  "universe_domain": "googleapis.com"
+}

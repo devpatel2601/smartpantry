@@ -1,6 +1,8 @@
 import React from 'react';
 import { View, Text, StyleSheet, TouchableOpacity, Dimensions, Platform } from 'react-native';
-import { Icon } from 'react-native-elements';
+import Icon from 'react-native-vector-icons/FontAwesome5';
+
+
 
 // Get screen width and height
 const { width, height } = Dimensions.get('window');
@@ -53,6 +55,24 @@ const HomeScreen = ({ navigation }) => {
         >
           <Icon name="utensils" type="font-awesome-5" color="#ffffff" size={28} />
           <Text style={styles.buttonText}>Find Recipes</Text>
+        </TouchableOpacity>
+
+        {/* New Button to Navigate to Nutritional Analysis Screen */}
+        <TouchableOpacity 
+          style={[styles.button, styles.nutritionButton]} 
+          onPress={() => navigation.navigate('NutritionalAnalysis')}
+        >
+          <Icon name="apple-alt" type="font-awesome-5" color="#ffffff" size={28} />
+          <Text style={styles.buttonText}>Nutritional Analysis</Text>
+        </TouchableOpacity>
+
+        {/* New Button to Navigate to Profile Screen */}
+        <TouchableOpacity 
+          style={[styles.button, styles.profileButton]} 
+          onPress={() => navigation.navigate('Profile')}
+        >
+          <Icon name="user" type="font-awesome-5" color="#ffffff" size={28} />
+          <Text style={styles.buttonText}>Profile</Text>
         </TouchableOpacity>
       </View>
     </View>
@@ -116,6 +136,12 @@ const styles = StyleSheet.create({
   },
   recipeButton: {
     backgroundColor: '#f44336', // Red
+  },
+  nutritionButton: {
+    backgroundColor: '#ff9800', // Orange
+  },
+  profileButton: {
+    backgroundColor: '#2196f3', // Blue
   },
 });
 
