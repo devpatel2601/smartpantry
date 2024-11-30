@@ -16,7 +16,7 @@ export default function WelcomeScreen({ navigation }) {
       <Text style={styles.subtitle}>Your smart pantry management assistant</Text>
 
       <TouchableOpacity style={styles.button} onPress={() => navigation.navigate('Home')}>
-      <Icon name="home" type="font-awesome" size={30} />
+        <Icon name="home" type="font-awesome" size={30} color="#fff" />
         <Text style={styles.buttonText}>Get Started</Text>
       </TouchableOpacity>
     </LinearGradient>
@@ -36,16 +36,16 @@ const styles = StyleSheet.create({
     marginBottom: 30,
   },
   title: {
-    fontSize: 28,
+    fontSize: 32, // Increased size for more emphasis
     fontWeight: 'bold',
     color: '#fff',
     marginBottom: 8,
   },
   subtitle: {
-    fontSize: 16,
+    fontSize: 18, // Slightly larger for better visibility
     color: '#f0f0f0',
     textAlign: 'center',
-    marginBottom: 30,
+    marginBottom: 40, // Increased space for better visual balance
   },
   button: {
     flexDirection: 'row',

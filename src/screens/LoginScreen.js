@@ -1,72 +1,54 @@
+// LoginScreen.js
 import React, { useState } from 'react';
-import { View, StyleSheet, Text } from 'react-native';
-import { TextInput, Button, Snackbar } from 'react-native-paper';
-import auth from '@react-native-firebase/auth';
+import { View, Text, TextInput, Button, StyleSheet, Alert } from 'react-native';
+import { auth } from '../firebaseConfig'; // Import auth from firebaseConfig
+import AsyncStorage from '@react-native-async-storage/async-storage';
 
 const LoginScreen = ({ navigation }) => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [loading, setLoading] = useState(false);
-  const [error, setError] = useState('');
-  const [isToastVisible, setIsToastVisible] = useState(false);
-  const [successMessage, setSuccessMessage] = useState('');
 
   const handleLogin = async () => {
-    setLoading(true);
-    try {
-      await auth().signInWithEmailAndPassword(email, password);
-      setSuccessMessage('Logged in successfully');
-      setIsToastVisible(true);
-      setLoading(false);
-      // Navigate to Welcome screen after successful login
-      navigation.navigate('Welcome');
-    } catch (error) {
-      setError('Login failed. Please check your credentials');
-      setLoading(false);
-      console.error('Error during login: ', error);
+    if (email && password) {
+      setLoading(true);
+      try {
+        const userCredential = await auth().signInWithEmailAndPassword(email, password); // Sign in with Firebase
+        const user = userCredential.user;
+        // Save user data to AsyncStorage after successful login
+        await AsyncStorage.setItem('user', user.email);
+        Alert.alert('Login Successful', 'Welcome back!');
+        navigation.navigate('Home'); // Navigate to the home screen
+      } catch (error) {
+        console.error(error.message);
+        Alert.alert('Login Failed', 'Please check your credentials and try again.');
+      } finally {
+        setLoading(false);
+      }
+    } else {
+      Alert.alert('Input Error', 'Please enter both email and password.');
     }
   };
 
   return (
     <View style={styles.container}>
       <Text style={styles.title}>Login</Text>
-
       <TextInput
-        label="Email"
+        style={styles.input}
+        placeholder="Email"
         value={email}
-        onChangeText={(text) => setEmail(text)}
-        style={styles.input}
+        onChangeText={setEmail}
         keyboardType="email-address"
-        mode="outlined"
       />
-
       <TextInput
-        label="Password"
-        value={password}
-        onChangeText={(text) => setPassword(text)}
         style={styles.input}
+        placeholder="Password"
+        value={password}
+        onChangeText={setPassword}
         secureTextEntry
-        mode="outlined"
       />
-
-      <Button
-        mode="contained"
-        loading={loading}
-        onPress={handleLogin}
-        style={styles.button}
-      >
-        Login
-      </Button>
-
-      {error && <Text style={styles.errorText}>{error}</Text>}
-
-      <Snackbar
-        visible={isToastVisible}
-        onDismiss={() => setIsToastVisible(false)}
-        duration={Snackbar.DURATION_SHORT}
-      >
-        {successMessage}
-      </Snackbar>
+      <Button title={loading ? "Logging In..." : "Login"} onPress={handleLogin} />
+      <Button title="Go to Sign Up" onPress={() => navigation.navigate('Signup')} />
     </View>
   );
 };
@@ -74,27 +56,23 @@ const LoginScreen = ({ navigation }) => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    padding: 20,
     justifyContent: 'center',
+    padding: 20,
     backgroundColor: '#fff',
   },
   title: {
-    fontSize: 24,
+    fontSize: 28,
     fontWeight: 'bold',
-    marginBottom: 20,
     textAlign: 'center',
+    marginBottom: 20,
   },
   input: {
-    marginBottom: 20,
-  },
-  button: {
-    marginTop: 10,
-  },
-  errorText: {
-    color: 'red',
-    fontSize: 14,
-    marginTop: 10,
-    textAlign: 'center',
+    height: 40,
+    borderColor: '#ddd',
+    borderWidth: 1,
+    marginBottom: 15,
+    paddingLeft: 10,
+    fontSize: 16,
   },
 });
 
