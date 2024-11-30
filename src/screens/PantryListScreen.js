@@ -4,18 +4,27 @@ import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
 import { format } from 'date-fns';
 import { firestore } from '../firebase'; // Ensure firestore is properly configured
 import { collection, getDocs, doc, deleteDoc } from 'firebase/firestore';
+import auth from '@react-native-firebase/auth'; // Import Firebase Auth
 
 const PantryListScreen = ({ navigation }) => {
   const [pantryItems, setPantryItems] = useState([]);
   const [searchTerm, setSearchTerm] = useState('');
+  const [loading, setLoading] = useState(true); // For loading state
+  const [error, setError] = useState(null); // For handling errors
 
-  // Get the userId (assumed to be available from Firebase Authentication)
-  const userId = 'userID1'; // Replace with actual user ID from Firebase Authentication
+  // Get the userId from Firebase Authentication
+  const userId = auth().currentUser?.uid; // Fetch the authenticated user's UID
 
-  // Fetch pantry items from Firebase
   useEffect(() => {
     const fetchPantryItems = async () => {
+      if (!userId) {
+        setError('User not logged in'); // Handle if no user is logged in
+        setLoading(false);
+        return;
+      }
+
       try {
+        console.log('Fetching pantry items for user ID:', userId); // Debugging line
         const userDocRef = doc(firestore, 'users', userId); // Reference to the user's document
         const pantryItemsRef = collection(userDocRef, 'pantryItems'); // Reference to the 'pantryItems' subcollection
         const pantryItemsSnap = await getDocs(pantryItemsRef); // Get items from the subcollection
@@ -25,14 +34,18 @@ const PantryListScreen = ({ navigation }) => {
           ...doc.data(),
         }));
 
+        console.log('Pantry items fetched:', items); // Debugging line
         setPantryItems(items);
       } catch (error) {
         console.error("Error fetching pantry items: ", error);
+        setError('Error fetching pantry items');
+      } finally {
+        setLoading(false); // Set loading to false once data is fetched
       }
     };
 
     fetchPantryItems();
-  }, [userId]);
+  }, [userId]); // Re-fetch when userId changes
 
   // Filter pantry items based on search term
   const filteredItems = pantryItems.filter(item =>
@@ -104,6 +117,10 @@ const PantryListScreen = ({ navigation }) => {
       </View>
     );
   };
+
+  if (loading) {
+    return <Text>{error || 'Loading...'}</Text>; // Show error if any or loading message
+  }
 
   return (
     <View style={styles.container}>
