@@ -3,5 +3,5 @@ module.exports = {
     'module:@react-native/babel-preset',
     '@babel/preset-typescript', // Add TypeScript preset
   ],
-  plugins: [],
+  plugins: ['react-native-reanimated/plugin'],
 };

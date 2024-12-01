@@ -1,26 +1,87 @@
 import React from 'react';
 import { View, Text, StyleSheet, Image, ScrollView, TouchableOpacity, Alert } from 'react-native';
+import firestore from '@react-native-firebase/firestore';
+import auth from '@react-native-firebase/auth'; // Import Firebase Auth
 
 const RecipeDetailScreen = ({ route, navigation }) => {
   const { recipe } = route.params; // Get the recipe data passed from RecipeSuggestionsScreen
 
-  const handleAddToPantry = () => {
+  // Function to handle adding ingredients to both pantry and grocery list
+  const handleAddToPantryAndGroceryList = async () => {
+    const userId = auth().currentUser?.uid; // Get current logged-in user ID
+    if (!userId) {
+      Alert.alert('Error', 'You must be logged in to add items to your pantry and grocery list.');
+      navigation.navigate('Login');
+      return;
+    }
+
     Alert.alert(
-      'Add to Pantry',
-      'Do you want to add the ingredients of this recipe to your pantry?',
+      'Add to Pantry & Grocery List',
+      'Do you want to add the ingredients of this recipe to your pantry and grocery list?',
       [
         { text: 'Cancel' },
-        { text: 'Add', onPress: () => console.log('Ingredients added to pantry!') }, // Logic to add ingredients to pantry
+        {
+          text: 'Add',
+          onPress: async () => {
+            try {
+              const ingredients = recipe.ingredients.split(','); // Split ingredients by comma
+              const batch = firestore().batch();
+
+              // Loop through each ingredient and add it to both pantry and grocery list
+              ingredients.forEach((ingredient) => {
+                const trimmedIngredient = ingredient.trim();
+
+                // Add to pantry
+                const pantryRef = firestore().collection('pantryItems').doc();
+                batch.set(pantryRef, {
+                  name: trimmedIngredient,
+                  expiryDate: null, // Optionally add expiryDate
+                  quantity: 1, // Default quantity
+                  category: 'Uncategorized', // Default category
+                  userId,
+                });
+
+                // Add to grocery list
+                const groceryListRef = firestore().collection('grocery list').doc();
+                batch.set(groceryListRef, {
+                  items: trimmedIngredient,
+                  userId,
+                });
+              });
+
+              // Commit batch operation
+              await batch.commit();
+
+              Alert.alert('Success', 'Ingredients have been added to your pantry and grocery list.');
+            } catch (error) {
+              console.error('Error adding ingredients to pantry and grocery list:', error);
+              Alert.alert('Error', 'Could not add ingredients. Please try again.');
+            }
+          },
+        },
       ]
     );
   };
 
   const renderIngredients = (ingredients) => {
-    return ingredients.split(',').map((ingredient, index) => (
-      <Text key={index} style={styles.ingredientItem}>
-        - {ingredient.trim()}
-      </Text>
-    ));
+    return ingredients.split(',').map((ingredient, index) => {
+      const trimmedIngredient = ingredient.trim();
+      return (
+        <View key={index} style={styles.ingredientRow}>
+          <Text style={styles.ingredientItem}>- {trimmedIngredient}</Text>
+          <TouchableOpacity
+            style={styles.addToPantryButton}
+            onPress={() =>
+              navigation.navigate('AddItem', {
+                itemDetails: { name: trimmedIngredient }, // Send ingredient details
+              })
+            }
+          >
+            <Text style={styles.buttonText}>Add to Pantry</Text>
+          </TouchableOpacity>
+        </View>
+      );
+    });
   };
 
   const renderInstructions = (instructions) => {
@@ -45,9 +106,9 @@ const RecipeDetailScreen = ({ route, navigation }) => {
       <Text style={styles.instructionsTitle}>Instructions:</Text>
       <View style={styles.instructionsContainer}>{renderInstructions(recipe.instructions)}</View>
 
-      {/* Add to Pantry Button */}
-      <TouchableOpacity style={styles.addButton} onPress={handleAddToPantry}>
-        <Text style={styles.addButtonText}>Add Ingredients to Pantry</Text>
+      {/* Add to Pantry & Grocery List Button */}
+      <TouchableOpacity style={styles.addButton} onPress={handleAddToPantryAndGroceryList}>
+        <Text style={styles.addButtonText}>Add Ingredients to Pantry & Grocery List</Text>
       </TouchableOpacity>
     </ScrollView>
   );

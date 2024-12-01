@@ -4,6 +4,9 @@
 <dict>
 	<key>CFBundleDevelopmentRegion</key>
 	<string>en</string>
+	<key>NSCameraUsageDescription</key>
+<string>We need access to the camera to scan QR and barcodes.</string>
+
 	<key>CFBundleDisplayName</key>
 	<string>smartpantry</string>
 	<key>CFBundleExecutable</key>

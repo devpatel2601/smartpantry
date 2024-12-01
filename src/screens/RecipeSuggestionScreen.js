@@ -44,26 +44,37 @@ const RecipeSuggestionsScreen = ({ navigation }) => {
       <FlatList
         data={recipes}
         renderItem={({ item }) => (
-          <TouchableOpacity style={styles.recipeItem} onPress={() => handlePress(item)}>
-            <Image source={{ uri: item.image }} style={styles.recipeImage} />
-            <View style={styles.recipeInfo}>
-              <Text style={styles.recipeTitle}>{item.name}</Text>
-              <Text style={styles.recipeDescription}>{item.description}</Text>
-              <TouchableOpacity 
-                style={styles.favoriteButton} 
-                onPress={() => handleFavorite(item.id)}>
-                <Icon 
-                  name={favorites.includes(item.id) ? 'heart' : 'heart-o'} 
-                  type="font-awesome" 
-                  color="white" 
-                  size={20} 
-                />
-                <Text style={styles.favoriteButtonText}>
-                  {favorites.includes(item.id) ? 'Unfavorite' : 'Favorite'}
-                </Text>
-              </TouchableOpacity>
-            </View>
-          </TouchableOpacity>
+          <TouchableOpacity
+  style={styles.recipeItem}
+  onPress={() => handlePress(item)}
+>
+  <Image source={{ uri: item.image }} style={styles.recipeImage} />
+  <View style={styles.recipeInfo}>
+    <Text style={styles.recipeTitle}>{item.name}</Text>
+    <Text style={styles.recipeDescription}>{item.description}</Text>
+    <TouchableOpacity
+  style={styles.favoriteButton}
+  onPress={(e) => {
+    e.stopPropagation();
+    handleFavorite(item.id);
+  }}
+>
+  <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+    <Icon
+      name={favorites.includes(item.id) ? 'heart' : 'heart-o'}
+      type="font-awesome"
+      color="white"
+      size={20}
+    />
+    <Text style={styles.favoriteButtonText}>
+      {favorites.includes(item.id) ? 'Unfavorite' : 'Favorite'}
+    </Text>
+  </View>
+</TouchableOpacity>
+
+  </View>
+</TouchableOpacity>
+
         )}
         keyExtractor={(item) => item.id}
       />

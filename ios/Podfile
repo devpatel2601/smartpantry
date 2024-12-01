@@ -8,12 +8,10 @@ require Pod::Executable.execute_command('node', ['-p',
 platform :ios, min_ios_version_supported
 prepare_react_native_project!
 
-
 pod 'Firebase/Analytics'
 pod 'Firebase/Auth'
 pod 'Firebase/Firestore'
 pod 'Firebase/Messaging'  # If you're using Firebase Cloud Messaging (FCM)
-
 
 linkage = ENV['USE_FRAMEWORKS']
 if linkage != nil
@@ -29,6 +27,9 @@ target 'smartpantry' do
     # An absolute path to your application root.
     :app_path => "#{Pod::Config.instance.installation_root}/.."
   )
+
+  # Add the line for react-native-vector-icons here
+  pod 'RNVectorIcons', :path => '../node_modules/react-native-vector-icons'
 
   target 'smartpantryTests' do
     inherit! :complete

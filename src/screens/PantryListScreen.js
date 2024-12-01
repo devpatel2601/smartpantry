@@ -2,8 +2,8 @@ import React, { useState, useEffect } from 'react';
 import { View, Text, FlatList, StyleSheet, TouchableOpacity, Alert, TextInput } from 'react-native';
 import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
 import { format } from 'date-fns';
-import firestore from '@react-native-firebase/firestore';
-import auth from '@react-native-firebase/auth';
+import firestore from '@react-native-firebase/firestore'; // Correct import for firestore
+import auth from '@react-native-firebase/auth'; // Ensure Firebase Auth is properly configured
 
 const PantryListScreen = ({ navigation }) => {
   const [pantryItems, setPantryItems] = useState([]);
@@ -14,6 +14,7 @@ const PantryListScreen = ({ navigation }) => {
   // Get the current logged-in user's ID
   const userId = auth().currentUser?.uid;
 
+  // Fetch pantry items when component mounts or userId changes
   useEffect(() => {
     const fetchPantryItems = async () => {
       if (!userId) {
@@ -23,25 +24,22 @@ const PantryListScreen = ({ navigation }) => {
       }
 
       try {
-        setLoading(true);
+        setLoading(true); // Set loading to true while fetching data
 
-        // Fetch pantry items for the current user
+        // Reference the `pantryItems` collection and query by `userId`
         const pantryItemsSnapshot = await firestore()
           .collection('pantryItems')
           .where('userId', '==', userId)
           .get();
 
-        const items = pantryItemsSnapshot.docs.map((doc) => ({
-          id: doc.id,
-          ...doc.data(),
-        }));
-
+        // Extract data from snapshot and set it to state
+        const items = pantryItemsSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
         setPantryItems(items);
       } catch (error) {
         console.error('Error fetching pantry items:', error);
         setError('Failed to fetch pantry items.');
       } finally {
-        setLoading(false);
+        setLoading(false); // Set loading to false after fetching data
       }
     };
 
@@ -79,7 +77,10 @@ const PantryListScreen = ({ navigation }) => {
           onPress: async () => {
             try {
               // Delete the item from Firestore
-              await firestore().collection('pantryItems').doc(itemId).delete();
+              await firestore()
+                .collection('pantryItems')
+                .doc(itemId)
+                .delete();
 
               // Remove the item from the state
               setPantryItems(pantryItems.filter((item) => item.id !== itemId));
@@ -110,7 +111,7 @@ const PantryListScreen = ({ navigation }) => {
             <Icon name="delete" size={24} color="red" />
           </TouchableOpacity>
           <TouchableOpacity
-            onPress={() => navigation.navigate('AddItemScreen', { itemDetails: item })}
+            onPress={() => navigation.navigate('AddItem', { itemDetails: item })}
           >
             <Icon name="pencil" size={24} color="blue" />
           </TouchableOpacity>

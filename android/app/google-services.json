@@ -12,7 +12,28 @@
           "package_name": "com.smartpantry"
         }
       },
-      "oauth_client": [],
+      "oauth_client": [
+        {
+          "client_id": "563212127735-jvhjde81ctunflu7kj1voblng0qkp13u.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.smartpantry",
+            "certificate_hash": "792f3b026e63a058c61c69a3c900bb043ecf0aaf"
+          }
+        },
+        {
+          "client_id": "563212127735-knhhsg6jqdm67dfghnh21ql50bp718l9.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.smartpantry",
+            "certificate_hash": "5e8f16062ea3cd2c4a0d547876baa6f38cabf625"
+          }
+        },
+        {
+          "client_id": "563212127735-o6h838t1ju5d8u5lfui7t3kp7ik8t9ii.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
       "api_key": [
         {
           "current_key": "AIzaSyAu6DMowg-mWALp5hNg0gZTnYi9R_GQUKE"
@@ -20,7 +41,19 @@
       ],
       "services": {
         "appinvite_service": {
-          "other_platform_oauth_client": []
+          "other_platform_oauth_client": [
+            {
+              "client_id": "563212127735-o6h838t1ju5d8u5lfui7t3kp7ik8t9ii.apps.googleusercontent.com",
+              "client_type": 3
+            },
+            {
+              "client_id": "563212127735-go36s51aandceijgkttu749tm9t6p1hb.apps.googleusercontent.com",
+              "client_type": 2,
+              "ios_info": {
+                "bundle_id": "com.smartpantryapp"
+              }
+            }
+          ]
         }
       }
     }

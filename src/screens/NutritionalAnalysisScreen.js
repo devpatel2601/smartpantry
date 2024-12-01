@@ -1,115 +1,110 @@
-import React from 'react';
-import { View, Text, TouchableOpacity, StyleSheet } from 'react-native';
-import Icon from 'react-native-vector-icons/Ionicons'; // Use react-native-vector-icons
+import React, { useEffect, useState } from 'react';
+import { View, Text, TouchableOpacity, StyleSheet, ActivityIndicator, Alert } from 'react-native';
+import Icon from 'react-native-vector-icons/Ionicons';
+import firestore from '@react-native-firebase/firestore';
+import auth from '@react-native-firebase/auth';
 
 const NutritionalAnalysisScreen = ({ navigation }) => {
-  const nutritionalData = {
-    calories: 250,
-    protein: '15g',
-    fat: '10g',
-    carbonFootprint: '0.5kg CO2',
+  const [nutritionalData, setNutritionalData] = useState(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
+
+  const userId = auth().currentUser?.uid;
+
+  const fetchData = async () => {
+    setLoading(true);
+    setError(null);
+
+    try {
+      if (!userId) {
+        throw new Error('User not logged in.');
+      }
+
+      // Fetch pantry items for the user
+      const pantryItemsSnapshot = await firestore()
+        .collection('pantryItems')
+        .where('userId', '==', userId)
+        .get();
+
+      if (pantryItemsSnapshot.empty) {
+        throw new Error('No pantry items found for this user.');
+      }
+
+      // Extract item names from pantry items
+      const itemNames = pantryItemsSnapshot.docs.map(doc => doc.data().name);
+
+      // Fetch nutritional data for each item
+      const nutritionalDataPromises = itemNames.map(async (itemName) => {
+        const nutritionalSnapshot = await firestore()
+          .collection('nutritional_data')
+          .doc(itemName)
+          .get();
+
+        if (!nutritionalSnapshot.exists) {
+          return {
+            calories: 0,
+            protein: 0,
+            fat: 0,
+            carbonFootprint: 0,
+          };
+        }
+
+        return nutritionalSnapshot.data();
+      });
+
+      // Wait for all nutritional data to be fetched
+      const allNutritionalData = await Promise.all(nutritionalDataPromises);
+
+      // Aggregate nutritional data
+      const analysis = allNutritionalData.reduce((acc, itemData) => {
+        acc.calories += itemData.calories || 0;
+        acc.protein += itemData.protein || 0;
+        acc.fat += itemData.fat || 0;
+        acc.carbonFootprint += itemData.carbonFootprint || 0;
+        return acc;
+      }, { calories: 0, protein: 0, fat: 0, carbonFootprint: 0 });
+
+      setNutritionalData(analysis);
+    } catch (err) {
+      console.error('Error fetching nutritional data:', err);
+      setError('Failed to fetch nutritional data');
+    } finally {
+      setLoading(false);
+    }
   };
+
+  useEffect(() => {
+    if (userId) {
+      fetchData();
+    }
+  }, [userId]);
+
+  if (loading) {
+    return <ActivityIndicator size="large" color="#0000ff" />;
+  }
+
+  if (error) {
+    return <Text>{error}</Text>;
+  }
 
   return (
     <View style={styles.container}>
       <Text style={styles.title}>Nutritional Analysis</Text>
-      
-      <View style={styles.dataContainer}>
-        <View style={[styles.dataItem, styles.calories]}>
-          <Icon name="flame-outline" size={28} color="#ff7043" />
-          <Text style={styles.dataLabel}>Calories</Text>
-          <Text style={styles.dataValue}>{nutritionalData.calories} kcal</Text>
+      {nutritionalData && (
+        <View>
+          <Text>Calories: {nutritionalData.calories} kcal</Text>
+          <Text>Protein: {nutritionalData.protein} g</Text>
+          <Text>Fat: {nutritionalData.fat} g</Text>
+          <Text>Carbon Footprint: {nutritionalData.carbonFootprint} kg</Text>
         </View>
-        
-        <View style={[styles.dataItem, styles.protein]}>
-          <Icon name="barbell-outline" size={28} color="#42a5f5" />
-          <Text style={styles.dataLabel}>Protein</Text>
-          <Text style={styles.dataValue}>{nutritionalData.protein}</Text>
-        </View>
-        
-        <View style={[styles.dataItem, styles.fat]}>
-          <Icon name="water-outline" size={28} color="#66bb6a" />
-          <Text style={styles.dataLabel}>Fat</Text>
-          <Text style={styles.dataValue}>{nutritionalData.fat}</Text>
-        </View>
-        
-        <View style={[styles.dataItem, styles.carbonFootprint]}>
-          <Icon name="leaf-outline" size={28} color="#8d6e63" />
-          <Text style={styles.dataLabel}>Carbon Footprint</Text>
-          <Text style={styles.dataValue}>{nutritionalData.carbonFootprint}</Text>
-        </View>
-      </View>
-
-      <TouchableOpacity style={styles.backButton} onPress={() => navigation.goBack()}>
-        <Icon name="arrow-back" size={24} color="#fff" />
-        <Text style={styles.backButtonText}>Back</Text>
-      </TouchableOpacity>
+      )}
     </View>
   );
 };
 
 const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    padding: 20,
-    backgroundColor: '#f5f5f5',
-  },
-  title: {
-    fontSize: 28,
-    fontWeight: 'bold',
-    color: '#333',
-    textAlign: 'center',
-    marginBottom: 20,
-  },
-  dataContainer: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    justifyContent: 'space-between',
-    marginVertical: 10,
-  },
-  dataItem: {
-    width: '48%',
-    backgroundColor: '#fff',
-    borderRadius: 10,
-    padding: 20,
-    alignItems: 'center',
-    marginBottom: 15,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 3 },
-    shadowOpacity: 0.1,
-    shadowRadius: 4,
-    elevation: 4,
-  },
-  dataLabel: {
-    fontSize: 16,
-    color: '#666',
-    marginTop: 10,
-  },
-  dataValue: {
-    fontSize: 20,
-    fontWeight: '600',
-    color: '#333',
-    marginTop: 5,
-  },
-  calories: { borderColor: '#ff7043' },
-  protein: { borderColor: '#42a5f5' },
-  fat: { borderColor: '#66bb6a' },
-  carbonFootprint: { borderColor: '#8d6e63' },
-  backButton: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    backgroundColor: '#4caf50',
-    paddingVertical: 15,
-    borderRadius: 30,
-    marginTop: 20,
-  },
-  backButtonText: {
-    color: '#fff',
-    fontSize: 18,
-    fontWeight: '600',
-    marginLeft: 10,
-  },
+  container: { padding: 16 },
+  title: { fontSize: 24, fontWeight: 'bold', marginBottom: 16 },
 });
 
 export default NutritionalAnalysisScreen;
