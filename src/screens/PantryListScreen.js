@@ -2,9 +2,8 @@ import React, { useState, useEffect } from 'react';
 import { View, Text, FlatList, StyleSheet, TouchableOpacity, Alert, TextInput } from 'react-native';
 import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
 import { format } from 'date-fns';
-import { firestore } from '../firebase'; // Ensure Firebase Firestore is properly configured
-import { collection, getDocs, doc, deleteDoc } from 'firebase/firestore';
-import auth from '@react-native-firebase/auth'; // Ensure Firebase Auth is properly configured
+import firestore from '@react-native-firebase/firestore';
+import auth from '@react-native-firebase/auth';
 
 const PantryListScreen = ({ navigation }) => {
   const [pantryItems, setPantryItems] = useState([]);
@@ -24,16 +23,13 @@ const PantryListScreen = ({ navigation }) => {
       }
 
       try {
-        setLoading(true); // Set loading to true while fetching data
+        setLoading(true);
 
-        // Reference the user's document in the `users` collection
-        const userDocRef = doc(firestore, 'users', userId);
-
-        // Reference the `pantryItems` subcollection
-        const pantryItemsRef = collection(userDocRef, 'pantryItems');
-
-        // Fetch all documents from the `pantryItems` subcollection
-        const pantryItemsSnapshot = await getDocs(pantryItemsRef);
+        // Fetch pantry items for the current user
+        const pantryItemsSnapshot = await firestore()
+          .collection('pantryItems')
+          .where('userId', '==', userId)
+          .get();
 
         const items = pantryItemsSnapshot.docs.map((doc) => ({
           id: doc.id,
@@ -45,7 +41,7 @@ const PantryListScreen = ({ navigation }) => {
         console.error('Error fetching pantry items:', error);
         setError('Failed to fetch pantry items.');
       } finally {
-        setLoading(false); // Set loading to false after fetching data
+        setLoading(false);
       }
     };
 
@@ -82,12 +78,8 @@ const PantryListScreen = ({ navigation }) => {
           text: 'Delete',
           onPress: async () => {
             try {
-              const userDocRef = doc(firestore, 'users', userId);
-              const pantryItemsRef = collection(userDocRef, 'pantryItems');
-              const itemDocRef = doc(pantryItemsRef, itemId);
-
               // Delete the item from Firestore
-              await deleteDoc(itemDocRef);
+              await firestore().collection('pantryItems').doc(itemId).delete();
 
               // Remove the item from the state
               setPantryItems(pantryItems.filter((item) => item.id !== itemId));

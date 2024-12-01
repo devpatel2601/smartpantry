@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { View, StyleSheet, Alert, TouchableOpacity } from 'react-native';
 import { TextInput, Button, Text, Snackbar } from 'react-native-paper';
@@ -7,85 +6,80 @@ import firestore from '@react-native-firebase/firestore';
 import auth from '@react-native-firebase/auth';
 
 const AddItemScreen = ({ route, navigation }) => {
-  const { itemDetails } = route.params || {}; // Get data passed from ScannerScreen
+  const { itemDetails } = route.params || {}; // Data passed for editing items
   const [itemName, setItemName] = useState(itemDetails?.name || '');
-  const [expiryDate, setExpiryDate] = useState(itemDetails?.expiry ? new Date(itemDetails.expiry) : null);
+  const [expiryDate, setExpiryDate] = useState(itemDetails?.expiryDate ? new Date(itemDetails.expiryDate) : null);
   const [showDatePicker, setShowDatePicker] = useState(false);
   const [loading, setLoading] = useState(false); // Loading state for UI feedback
   const [error, setError] = useState(''); // Error state for input validation
   const [successMessage, setSuccessMessage] = useState(''); // Success toast message
   const [isToastVisible, setIsToastVisible] = useState(false); // Show success toast
 
-  // New states for nutritional info and carbon footprint
-  const [calories, setCalories] = useState('');
-  const [protein, setProtein] = useState('');
-  const [fat, setFat] = useState('');
-  const [carbonFootprint, setCarbonFootprint] = useState('');
+  // Nutritional info and carbon footprint
+  const [calories, setCalories] = useState(itemDetails?.calories || '');
+  const [protein, setProtein] = useState(itemDetails?.protein || '');
+  const [fat, setFat] = useState(itemDetails?.fat || '');
+  const [carbonFootprint, setCarbonFootprint] = useState(itemDetails?.carbonFootprint || '');
 
+  // Additional fields
+  const [category, setCategory] = useState(itemDetails?.category || '');
+  const [price, setPrice] = useState(itemDetails?.price?.toString() || '');
+  const [quantity, setQuantity] = useState(itemDetails?.quantity?.toString() || '');
 
+  const userId = auth().currentUser?.uid; // Get the authenticated user's ID
 
-const userId = auth().currentUser?.uid; // Get the authenticated user's ID
-console.log('User ID:', userId); 
-
-const addItem = async () => {
-  if (!itemName || !expiryDate || !category || !price || !quantity) {
-    setError('Please fill out all fields.');
-    return;
+  if (!userId) {
+    Alert.alert('Error', 'You must be logged in to add items.');
+    navigation.navigate('Login');
+    return null;
   }
 
-  const safeItemName = itemName || 'Unknown Item';
-  const safeCategory = category || 'Uncategorized';
-  const safeExpiryDate = expiryDate || new Date();
-  const safePrice = price !== undefined && price !== null ? parseFloat(price) : 0;
-  const safeQuantity = quantity !== undefined && quantity !== null ? parseInt(quantity) : 0;
-  const safeUserId = userId || 'Unknown User';
-
-  setLoading(true); // Show loading while saving
-
-  const pantryItem = {
-    category: safeCategory,
-    name: safeItemName,
-    expiryDate: safeExpiryDate,
-    price: safePrice,
-    quantity: safeQuantity,
-    userId: safeUserId,
-  };
-
-  try {
-    // Check if the user's document exists. If not, create it.
-    const userDocRef = firestore().collection('users').doc(userId);
-
-    const docSnapshot = await userDocRef.get();
-
-    if (!docSnapshot.exists) {
-      // If the user document doesn't exist, create it
-      console.log('User document does not exist, creating new document');
-      await userDocRef.set({
-        pantry: [pantryItem],  // Create pantry array with the first item
-      });
-    } else {
-      // If it exists, just update the pantry array
-      console.log('User document exists, updating pantry array');
-      await userDocRef.update({
-        pantry: firestore.FieldValue.arrayUnion(pantryItem),
-      });
+  const addItem = async () => {
+    if (!itemName || !expiryDate || !category || !price || !quantity) {
+      setError('Please fill out all fields.');
+      return;
     }
 
-    setLoading(false);
-    setSuccessMessage('Item successfully added!');
-    setIsToastVisible(true);
+    setLoading(true);
+    setError('');
 
-    // Navigate to PantryList with the new item
-    navigation.navigate('PantryList', { newItem: pantryItem });
-  } catch (error) {
-    setLoading(false);
-    setError('Error adding item. Please try again.');
-    console.error('Error adding pantry item:', error);  // Log the error to the console
-  }
-};
+    const pantryItem = {
+      name: itemName,
+      expiryDate: expiryDate.toISOString(),
+      category,
+      price: parseFloat(price),
+      quantity: parseInt(quantity, 10),
+      userId,
+      calories: parseFloat(calories) || null,
+      protein: parseFloat(protein) || null,
+      fat: parseFloat(fat) || null,
+      carbonFootprint: parseFloat(carbonFootprint) || null,
+    };
 
+    try {
+      const pantryRef = firestore().collection('pantryItems');
 
-  
+      if (itemDetails?.id) {
+        // Update existing item
+        await pantryRef.doc(itemDetails.id).update(pantryItem);
+        setSuccessMessage('Item updated successfully!');
+      } else {
+        // Add new item
+        await pantryRef.add(pantryItem);
+        setSuccessMessage('Item added successfully!');
+      }
+
+      setIsToastVisible(true);
+      setLoading(false);
+
+      // Navigate back to the Pantry List screen
+      navigation.navigate('PantryList');
+    } catch (error) {
+      console.error('Error adding item:', error);
+      setLoading(false);
+      setError('Error adding item. Please try again.');
+    }
+  };
 
   const handleDateChange = (event, selectedDate) => {
     setShowDatePicker(false);
@@ -96,19 +90,17 @@ const addItem = async () => {
 
   return (
     <View style={styles.container}>
-      <Text style={styles.title}>Add Item</Text>
+      <Text style={styles.title}>{itemDetails ? 'Edit Item' : 'Add Item'}</Text>
 
-      {/* Item Name Input */}
       <TextInput
         label="Item Name"
         value={itemName}
-        onChangeText={(text) => setItemName(text)}
-        style={[styles.input, error ? styles.inputError : null]}
+        onChangeText={setItemName}
+        style={styles.input}
         mode="outlined"
         autoCapitalize="words"
       />
 
-      {/* Expiry Date Picker */}
       <TouchableOpacity onPress={() => setShowDatePicker(true)} style={styles.dateInput}>
         <Text style={styles.dateText}>
           {expiryDate ? expiryDate.toLocaleDateString() : 'Select Expiry Date'}
@@ -123,57 +115,63 @@ const addItem = async () => {
         />
       )}
 
-      {/* Nutritional Information Inputs */}
+      <TextInput label="Category" value={category} onChangeText={setCategory} style={styles.input} mode="outlined" />
+      <TextInput
+        label="Price"
+        value={price}
+        onChangeText={setPrice}
+        style={styles.input}
+        mode="outlined"
+        keyboardType="numeric"
+      />
+      <TextInput
+        label="Quantity"
+        value={quantity}
+        onChangeText={setQuantity}
+        style={styles.input}
+        mode="outlined"
+        keyboardType="numeric"
+      />
+
       <TextInput
         label="Calories"
         value={calories}
-        onChangeText={(text) => setCalories(text)}
-        style={[styles.input, error ? styles.inputError : null]}
+        onChangeText={setCalories}
+        style={styles.input}
         mode="outlined"
         keyboardType="numeric"
       />
       <TextInput
         label="Protein (g)"
         value={protein}
-        onChangeText={(text) => setProtein(text)}
-        style={[styles.input, error ? styles.inputError : null]}
+        onChangeText={setProtein}
+        style={styles.input}
         mode="outlined"
         keyboardType="numeric"
       />
       <TextInput
         label="Fat (g)"
         value={fat}
-        onChangeText={(text) => setFat(text)}
-        style={[styles.input, error ? styles.inputError : null]}
+        onChangeText={setFat}
+        style={styles.input}
         mode="outlined"
         keyboardType="numeric"
       />
-
-      {/* Carbon Footprint Input */}
       <TextInput
         label="Carbon Footprint (kg)"
         value={carbonFootprint}
-        onChangeText={(text) => setCarbonFootprint(text)}
-        style={[styles.input, error ? styles.inputError : null]}
+        onChangeText={setCarbonFootprint}
+        style={styles.input}
         mode="outlined"
         keyboardType="numeric"
       />
 
-      {/* Add Item Button */}
-      <Button
-        mode="contained"
-        onPress={addItem}
-        style={styles.button}
-        loading={loading}
-        disabled={loading}
-      >
-        Add Item
+      <Button mode="contained" onPress={addItem} style={styles.button} loading={loading} disabled={loading}>
+        {itemDetails ? 'Update Item' : 'Add Item'}
       </Button>
 
-      {/* Input Error Message */}
-      {error && <Text style={styles.errorText}>{error}</Text>}
+      {error ? <Text style={styles.errorText}>{error}</Text> : null}
 
-      {/* Success Toast Message */}
       <Snackbar
         visible={isToastVisible}
         onDismiss={() => setIsToastVisible(false)}
@@ -201,9 +199,6 @@ const styles = StyleSheet.create({
   input: {
     marginBottom: 20,
   },
-  inputError: {
-    borderColor: 'red',
-  },
   dateInput: {
     height: 50,
     justifyContent: 'center',
@@ -222,7 +217,7 @@ const styles = StyleSheet.create({
   },
   errorText: {
     color: 'red',
-    fontSize: 14,
+    fontSize: 14, 
     marginTop: 10,
     textAlign: 'center',
   },
