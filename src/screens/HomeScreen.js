@@ -56,7 +56,7 @@ const HomeScreen = ({ navigation }) => {
       {/* Background Image or Color */}
       <Image
         source={{
-          uri: 'https://your-image-url.jpg',  // Replace with an actual image URL
+          uri: 'https://img.freepik.com/premium-vector/hand-drawn-pantry-cartoon-vector-illustration-clipart-white-background_191095-37850.jpg',  // Replace with an actual image URL
         }}
         style={styles.backgroundImage}
       />
@@ -80,7 +80,7 @@ const HomeScreen = ({ navigation }) => {
             style={[styles.button, styles.primaryButton]} 
             onPress={() => navigation.navigate('Scanner')}
           >
-            <IconButton name="plus-circle" color="#ffffff" size={28} />
+            <IconButton name="barcode" color="#ffffff" size={28} />
             <Text style={styles.buttonText}>Scan Item</Text>
           </TouchableOpacity>
 
@@ -91,6 +91,8 @@ const HomeScreen = ({ navigation }) => {
             <IconButton name="plus-circle" color="#ffffff" size={28} />
             <Text style={styles.buttonText}>Add Item</Text>
           </TouchableOpacity>
+
+          
         </View>
 
         {/* Row 2 */}
@@ -126,9 +128,21 @@ const HomeScreen = ({ navigation }) => {
             style={[styles.button, styles.primaryButton]} 
             onPress={() => navigation.navigate('Grocery')}
           >
-            <IconButton name="user" color="#ffffff" size={28} />
+            <IconButton name="shopping-cart" color="#ffffff" size={28} />
+<Text style={styles.buttonText}>Grocery List</Text>
+
+          </TouchableOpacity>
+        </View>
+        <View style={styles.row}>
+          <TouchableOpacity 
+            style={[styles.button, styles.primaryButton]} 
+            onPress={() => navigation.navigate('Grocery')}  
+          >
+            <IconButton name="apple-alt" color="#ffffff" size={28} />
             <Text style={styles.buttonText}>Grocery List</Text>
           </TouchableOpacity>
+
+      
         </View>
       </View>
     </View>

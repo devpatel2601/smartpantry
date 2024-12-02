@@ -14,6 +14,7 @@ import LinearGradient from 'react-native-linear-gradient';
 import { Icon } from 'react-native-elements';
 import auth from '@react-native-firebase/auth';
 import { GoogleSignin } from '@react-native-google-signin/google-signin';
+import { grey100 } from 'react-native-paper/lib/typescript/styles/themes/v2/colors';
 
 GoogleSignin.configure({
   webClientId: 'YOUR_WEB_CLIENT_ID', // Replace with your Firebase web client ID
@@ -34,7 +35,7 @@ const LoginScreen = ({ navigation }) => {
     try {
       await auth().signInWithEmailAndPassword(email, password);
       setLoading(false);
-      navigation.navigate('Home');
+      navigation.navigate('Welcome');
     } catch (error) {
       setLoading(false);
       Alert.alert('Login Failed', error.message || 'An error occurred. Please try again.');
@@ -135,6 +136,7 @@ const styles = StyleSheet.create({
     marginBottom: 15,
     borderRadius: 5,
     backgroundColor: '#fff',
+    color: '#000', // Set text color to black or another visible color
   },
   loginButton: {
     backgroundColor: '#fff',
@@ -162,7 +164,7 @@ const styles = StyleSheet.create({
     marginTop: 10,
   },
   googleButtonText: {
-    color: '#fff',
+    color: 'grey',
     fontSize: 18,
     fontWeight: '600',
     marginLeft: 10,
@@ -171,10 +173,11 @@ const styles = StyleSheet.create({
     marginTop: 20,
   },
   signupText: {
-    color: '#fff',
+    color: 'grey',
     fontSize: 16,
     textAlign: 'center',
   },
 });
+
 
 export default LoginScreen;

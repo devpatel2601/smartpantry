@@ -4,7 +4,9 @@ import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
 import { format } from 'date-fns';
 import firestore from '@react-native-firebase/firestore'; // Correct import for firestore
 import auth from '@react-native-firebase/auth'; // Ensure Firebase Auth is properly configured
-
+import { Timestamp } from '@react-native-firebase/firestore';
+import { useNavigation } from '@react-navigation/native';
+import { Button } from 'react-native-paper';
 const PantryListScreen = ({ navigation }) => {
   const [pantryItems, setPantryItems] = useState([]);
   const [searchTerm, setSearchTerm] = useState('');
@@ -13,7 +15,9 @@ const PantryListScreen = ({ navigation }) => {
 
   // Get the current logged-in user's ID
   const userId = auth().currentUser?.uid;
-
+  const navigateToScanner = () => {
+    navigation.navigate('Scanner'); // Make sure 'ScannerScreen' matches the name in your navigator
+  };
   // Fetch pantry items when component mounts or userId changes
   useEffect(() => {
     const fetchPantryItems = async () => {
@@ -53,8 +57,8 @@ const PantryListScreen = ({ navigation }) => {
 
   // Sort pantry items by expiry status
   const sortedItems = filteredItems.sort((a, b) => {
-    const expiryA = new Date(a.expiryDate);
-    const expiryB = new Date(b.expiryDate);
+    const expiryA = a.expiryDate && a.expiryDate.toDate ? a.expiryDate.toDate() : new Date(0); // Default to Epoch for undefined
+    const expiryB = b.expiryDate && b.expiryDate.toDate ? b.expiryDate.toDate() : new Date(0);
 
     const now = new Date();
     const isNearExpiryA = expiryA < new Date(now.setDate(now.getDate() + 3));
@@ -94,14 +98,19 @@ const PantryListScreen = ({ navigation }) => {
   };
 
   const renderItem = ({ item }) => {
-    const formattedExpiry = format(new Date(item.expiryDate), 'MMM dd, yyyy');
-
-    // Determine the item's expiry status
-    const isExpired = new Date(item.expiryDate) < new Date();
-    const isNearExpiry = new Date(item.expiryDate) < new Date(new Date().setDate(new Date().getDate() + 3));
-
+    const expiryDate = item.expiryDate && item.expiryDate.toDate ? item.expiryDate.toDate() : null;
+    const formattedExpiry = expiryDate ? format(expiryDate, 'MMM dd, yyyy') : 'No expiry date';
+  
+    const isExpired = expiryDate && expiryDate < new Date();
+    const isNearExpiry = expiryDate && expiryDate < new Date(new Date().setDate(new Date().getDate() + 3));
+  
     return (
-      <View style={[styles.itemCard, isExpired ? styles.expired : isNearExpiry ? styles.nearExpiry : null]}>
+      <View
+        style={[
+          styles.itemCard,
+          isExpired ? styles.expired : isNearExpiry ? styles.nearExpiry : null,
+        ]}
+      >
         <View style={styles.itemInfo}>
           <Text style={styles.itemName}>{item.name}</Text>
           <Text style={styles.itemExpiry}>Expires on: {formattedExpiry}</Text>
@@ -119,6 +128,7 @@ const PantryListScreen = ({ navigation }) => {
       </View>
     );
   };
+  
 
   if (loading) {
     return <Text>{error || 'Loading pantry items...'}</Text>;
@@ -139,6 +149,13 @@ const PantryListScreen = ({ navigation }) => {
         renderItem={renderItem}
         contentContainerStyle={styles.list}
       />
+      <Button
+        mode="outlined"
+        onPress={navigateToScanner}
+        style={[styles.button, { marginTop: 16 }]} // Adding margin for spacing
+      >
+        Scan Item
+      </Button>
     </View>
   );
 };
@@ -148,6 +165,7 @@ const styles = StyleSheet.create({
     flex: 1,
     padding: 20,
     backgroundColor: '#f5f5f5',
+    
   },
   searchBar: {
     height: 40,
@@ -157,6 +175,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: 10,
     marginBottom: 20,
     fontSize: 16,
+    color: '#000',
   },
   list: {
     paddingBottom: 20,
@@ -173,6 +192,7 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.1,
     shadowRadius: 5,
     elevation: 2,
+    
   },
   expired: {
     backgroundColor: '#f8d7da',
@@ -186,6 +206,7 @@ const styles = StyleSheet.create({
   itemName: {
     fontSize: 18,
     fontWeight: 'bold',
+    color: '#000',
   },
   itemExpiry: {
     fontSize: 14,

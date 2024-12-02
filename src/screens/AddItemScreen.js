@@ -4,10 +4,13 @@ import { TextInput, Button, Text, Snackbar } from 'react-native-paper';
 import DateTimePicker from '@react-native-community/datetimepicker';
 import firestore from '@react-native-firebase/firestore';
 import auth from '@react-native-firebase/auth';
+import { useNavigation } from '@react-navigation/native';
 
 const AddItemScreen = ({ route, navigation }) => {
+  const { pantryItem } = route.params || {};
+
   const { itemDetails } = route.params || {}; // Data passed for editing items
-  const [itemName, setItemName] = useState(itemDetails?.name || '');
+  const [itemName, setItemName] = useState(pantryItem?.name || '');
   const [expiryDate, setExpiryDate] = useState(itemDetails?.expiryDate ? new Date(itemDetails.expiryDate) : null);
   const [showDatePicker, setShowDatePicker] = useState(false);
   const [loading, setLoading] = useState(false); // Loading state for UI feedback
@@ -15,19 +18,17 @@ const AddItemScreen = ({ route, navigation }) => {
   const [successMessage, setSuccessMessage] = useState(''); // Success toast message
   const [isToastVisible, setIsToastVisible] = useState(false); // Show success toast
 
-  // Nutritional info and carbon footprint
-  const [calories, setCalories] = useState(itemDetails?.calories || '');
-  const [protein, setProtein] = useState(itemDetails?.protein || '');
-  const [fat, setFat] = useState(itemDetails?.fat || '');
-  const [carbonFootprint, setCarbonFootprint] = useState(itemDetails?.carbonFootprint || '');
 
   // Additional fields
-  const [category, setCategory] = useState(itemDetails?.category || '');
+  const [brand, setBrand] = useState(pantryItem?.brand || '');
   const [price, setPrice] = useState(itemDetails?.price?.toString() || '');
-  const [quantity, setQuantity] = useState(itemDetails?.quantity?.toString() || '');
+  const [quantity, setQuantity] = useState(pantryItem?.quantity?.toString() || '');
 
   const userId = auth().currentUser?.uid; // Get the authenticated user's ID
-
+ 
+  const navigateToScanner = () => {
+    navigation.navigate('Scanner'); // Make sure 'ScannerScreen' matches the name in your navigator
+  };
   if (!userId) {
     Alert.alert('Error', 'You must be logged in to add items.');
     navigation.navigate('Login');
@@ -35,7 +36,7 @@ const AddItemScreen = ({ route, navigation }) => {
   }
 
   const addItem = async () => {
-    if (!itemName || !expiryDate || !category || !price || !quantity) {
+    if (!itemName || !expiryDate || !brand || !price || !quantity) {
       setError('Please fill out all fields.');
       return;
     }
@@ -45,15 +46,11 @@ const AddItemScreen = ({ route, navigation }) => {
 
     const pantryItem = {
       name: itemName,
-      expiryDate: expiryDate.toISOString(),
-      category,
+      expiryDate: firestore.Timestamp.fromDate(expiryDate),
+      brand,
       price: parseFloat(price),
       quantity: parseInt(quantity, 10),
-      userId,
-      calories: parseFloat(calories) || null,
-      protein: parseFloat(protein) || null,
-      fat: parseFloat(fat) || null,
-      carbonFootprint: parseFloat(carbonFootprint) || null,
+      userId
     };
 
     try {
@@ -115,7 +112,7 @@ const AddItemScreen = ({ route, navigation }) => {
         />
       )}
 
-      <TextInput label="Category" value={category} onChangeText={setCategory} style={styles.input} mode="outlined" />
+      <TextInput label="Brand" value={brand} onChangeText={setBrand} style={styles.input} mode="outlined" />
       <TextInput
         label="Price"
         value={price}
@@ -133,44 +130,18 @@ const AddItemScreen = ({ route, navigation }) => {
         keyboardType="numeric"
       />
 
-      <TextInput
-        label="Calories"
-        value={calories}
-        onChangeText={setCalories}
-        style={styles.input}
-        mode="outlined"
-        keyboardType="numeric"
-      />
-      <TextInput
-        label="Protein (g)"
-        value={protein}
-        onChangeText={setProtein}
-        style={styles.input}
-        mode="outlined"
-        keyboardType="numeric"
-      />
-      <TextInput
-        label="Fat (g)"
-        value={fat}
-        onChangeText={setFat}
-        style={styles.input}
-        mode="outlined"
-        keyboardType="numeric"
-      />
-      <TextInput
-        label="Carbon Footprint (kg)"
-        value={carbonFootprint}
-        onChangeText={setCarbonFootprint}
-        style={styles.input}
-        mode="outlined"
-        keyboardType="numeric"
-      />
-
       <Button mode="contained" onPress={addItem} style={styles.button} loading={loading} disabled={loading}>
         {itemDetails ? 'Update Item' : 'Add Item'}
       </Button>
 
       {error ? <Text style={styles.errorText}>{error}</Text> : null}
+      <Button
+        mode="outlined"
+        onPress={navigateToScanner}
+        style={[styles.button, { marginTop: 16 }]} // Adding margin for spacing
+      >
+        Scan Item
+      </Button>
 
       <Snackbar
         visible={isToastVisible}

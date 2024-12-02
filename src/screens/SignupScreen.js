@@ -225,7 +225,7 @@ const styles = StyleSheet.create({
     marginTop: 20,
   },
   loginText: {
-    color: '#fff',
+    color: '#000',
     fontSize: 16,
     textAlign: 'center',
   },
